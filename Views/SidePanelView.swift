@@ -6,13 +6,14 @@ struct SidePanelView: View {
     @State private var navigateToLeaderboard = false
     @State private var navigateToAchievements = false
     @State private var navigateToProfile = false
+    @State private var navigateToHowToPlay = false  // ADDED
     
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 0) {
                 // Header
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("🌌 ColorNova2")
+                    Text("🌌 Color Nova")
                         .font(.title2.bold())
                         .foregroundColor(.white)
                     
@@ -41,7 +42,7 @@ struct SidePanelView: View {
                     SidePanelButton(
                         icon: "star.fill",
                         title: "Achievements",
-                        color: .purple
+                        color: .cyan  // Changed from purple
                     ) {
                         navigateToAchievements = true
                         isShowing = false
@@ -50,7 +51,7 @@ struct SidePanelView: View {
                     SidePanelButton(
                         icon: "person.fill",
                         title: "Profile",
-                        color: .cyan
+                        color: .blue  // Changed from cyan
                     ) {
                         navigateToProfile = true
                         isShowing = false
@@ -61,7 +62,7 @@ struct SidePanelView: View {
                         title: "How to Play",
                         color: .green
                     ) {
-                        // TODO: Show tutorial
+                        navigateToHowToPlay = true  // ADDED
                         isShowing = false
                     }
                 }
@@ -92,8 +93,8 @@ struct SidePanelView: View {
             .background(
                 LinearGradient(
                     colors: [
-                        Color(red: 0.1, green: 0.05, blue: 0.2),
-                        Color(red: 0.15, green: 0.1, blue: 0.25)
+                        Color(red: 0.05, green: 0.1, blue: 0.2),  // Less purple, more blue
+                        Color(red: 0.1, green: 0.15, blue: 0.25)
                     ],
                     startPoint: .top,
                     endPoint: .bottom
@@ -126,6 +127,12 @@ struct SidePanelView: View {
             }
             .hidden()
         )
+        .background(
+            NavigationLink(destination: HowToPlayView(), isActive: $navigateToHowToPlay) {  // ADDED
+                EmptyView()
+            }
+            .hidden()
+        )
     }
 }
 
@@ -137,21 +144,20 @@ struct SidePanelButton: View {
     
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 15) {
+            HStack {
                 Image(systemName: icon)
-                    .font(.title3)
                     .foregroundColor(color)
-                    .frame(width: 30)
+                    .font(.title3)
                 
                 Text(title)
-                    .font(.body)
                     .foregroundColor(.white)
+                    .font(.body)
                 
                 Spacer()
                 
                 Image(systemName: "chevron.right")
+                    .foregroundColor(.white.opacity(0.3))
                     .font(.caption)
-                    .foregroundColor(.white.opacity(0.5))
             }
             .padding()
             .background(Color.white.opacity(0.05))
@@ -161,9 +167,6 @@ struct SidePanelButton: View {
 }
 
 #Preview {
-    ZStack {
-        GalaxyBackgroundView()
-        SidePanelView(isShowing: .constant(true))
-            .environmentObject(AuthViewModel())
-    }
+    SidePanelView(isShowing: .constant(true))
+        .environmentObject(AuthViewModel())
 }

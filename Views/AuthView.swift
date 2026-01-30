@@ -19,12 +19,12 @@ struct AuthView: View {
                 
                 // Logo/Title
                 VStack(spacing: 10) {
-                    Text("🌌")
+                    Image(systemName: "sparkles")
                         .font(.system(size: 80))
-                    Text("ColorNova2")
+                        .foregroundColor(.cyan)
+                    Text("Color Nova")
                         .font(.system(size: 42, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
-                        .shadow(color: .purple.opacity(0.8), radius: 10)
+                        .foregroundColor(.cyan)
                     Text("Match the Galaxy")
                         .font(.subheadline)
                         .foregroundColor(.white.opacity(0.7))
@@ -50,7 +50,6 @@ struct AuthView: View {
                         .textFieldStyle(GalaxyTextFieldStyle())
                         .textContentType(isSignUp ? .newPassword : .password)
                     
-                    // Privacy policy checkbox (only on signup)
                     if isSignUp {
                         HStack {
                             Button(action: {
@@ -77,11 +76,9 @@ struct AuthView: View {
                 }
                 .padding(.horizontal, 30)
                 
-                // Action button
+                // Action button - NO SHADOW
                 Button(action: {
-                    Task {
-                        await handleAuth()
-                    }
+                    handleAuth()
                 }) {
                     if viewModel.isLoading {
                         ProgressView()
@@ -96,7 +93,7 @@ struct AuthView: View {
                 .frame(height: 55)
                 .background(
                     LinearGradient(
-                        colors: [.purple, .blue],
+                        colors: [.cyan, .blue],  // Less purple
                         startPoint: .leading,
                         endPoint: .trailing
                     )
@@ -114,67 +111,36 @@ struct AuthView: View {
                 }) {
                     Text(isSignUp ? "Already have an account? Sign In" : "Don't have an account? Sign Up")
                         .font(.footnote)
-                        .foregroundColor(.white.opacity(0.8))
+                        .foregroundColor(.white.opacity(0.7))
                 }
                 
                 Spacer()
             }
-        }
-        .sheet(isPresented: $showPrivacyPolicy) {
-            PrivacyPolicyView()
-        }
-        .alert("Error", isPresented: $showError) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(viewModel.errorMessage ?? "An error occurred")
-        }
-        .onChange(of: viewModel.errorMessage) { newValue in
-            if newValue != nil {
-                showError = true
+            .alert("Error", isPresented: $showError) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(viewModel.errorMessage ?? "An error occurred")
+            }
+            .sheet(isPresented: $showPrivacyPolicy) {
+                PrivacyPolicyView()
             }
         }
     }
     
-    // MARK: - Authentication
-    
-    func handleAuth() async {
-        print("🔵 handleAuth called - isSignUp: \(isSignUp)")
-        
-        guard !email.isEmpty, !password.isEmpty else {
-            viewModel.errorMessage = "Please fill in all fields"
-            showError = true
-            return
-        }
-        
-        if isSignUp {
-            guard !name.isEmpty else {
-                viewModel.errorMessage = "Please enter your name"
-                showError = true
-                return
+    private func handleAuth() {
+        Task {
+            if isSignUp {
+                await viewModel.signUp(email: email, password: password, name: name)
+            } else {
+                await viewModel.signIn(email: email, password: password)
             }
-            guard acceptedPrivacy else {
-                viewModel.errorMessage = "Please accept the privacy policy"
+            
+            if viewModel.errorMessage != nil {
                 showError = true
-                return
             }
-            print("🔵 Calling signUp...")
-            await viewModel.signUp(email: email, password: password, name: name)
-        } else {
-            print("🔵 Calling signIn...")
-            await viewModel.signIn(email: email, password: password)
-        }
-        
-        // Show error if sign in/up failed
-        if let error = viewModel.errorMessage {
-            print("❌ Auth failed with error: \(error)")
-            showError = true
-        } else {
-            print("✅ Auth successful!")
         }
     }
 }
-
-// MARK: - Custom Text Field Style
 
 struct GalaxyTextFieldStyle: TextFieldStyle {
     func _body(configuration: TextField<Self._Label>) -> some View {
@@ -183,9 +149,10 @@ struct GalaxyTextFieldStyle: TextFieldStyle {
             .background(Color.white.opacity(0.1))
             .cornerRadius(10)
             .foregroundColor(.white)
+            .accentColor(.cyan)
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
-                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
             )
     }
 }

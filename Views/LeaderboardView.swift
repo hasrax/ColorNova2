@@ -8,8 +8,8 @@ struct LeaderboardView: View {
         ZStack {
             GalaxyBackgroundView()
             
-            VStack(spacing: 20) {
-                // Header
+            VStack(spacing: 0) {
+                // Header - MOVED HIGHER
                 HStack {
                     Button(action: { dismiss() }) {
                         Image(systemName: "chevron.left")
@@ -20,7 +20,7 @@ struct LeaderboardView: View {
                     Spacer()
                     
                     Text("🏆 Leaderboard")
-                        .font(.title.bold())
+                        .font(.largeTitle.bold())  // Made bigger
                         .foregroundColor(.white)
                     
                     Spacer()
@@ -28,7 +28,9 @@ struct LeaderboardView: View {
                     // Placeholder for symmetry
                     Color.clear.frame(width: 30)
                 }
-                .padding()
+                .padding(.horizontal)
+                .padding(.top, 20)  // Added top padding
+                .padding(.bottom, 30)  // More space below title
                 
                 // Filters
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -51,11 +53,12 @@ struct LeaderboardView: View {
                     }
                     .padding(.horizontal)
                 }
+                .padding(.bottom, 20)  // More space before scores
                 
                 // Top scores list
                 ScrollView {
-                    VStack(spacing: 12) {
-                        ForEach(Array(viewModel.filteredScores.enumerated()), id: \.element.id) { index, entry in
+                    VStack(spacing: 15) {  // Increased spacing
+                        ForEach(Array(viewModel.aggregatedScores.enumerated()), id: \.element.userId) { index, entry in
                             LeaderboardRowView(
                                 rank: index + 1,
                                 entry: entry
@@ -93,7 +96,7 @@ struct FilterButton: View {
 
 struct LeaderboardRowView: View {
     let rank: Int
-    let entry: ScoreEntry
+    let entry: AggregatedScore
     
     var body: some View {
         HStack(spacing: 15) {
@@ -103,7 +106,7 @@ struct LeaderboardRowView: View {
                 .frame(width: 40)
             
             // Player info
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {  // More spacing
                 Text(entry.name)
                     .font(.headline)
                     .foregroundColor(.white)
@@ -112,21 +115,39 @@ struct LeaderboardRowView: View {
                     Text(entry.mode.title)
                         .font(.caption)
                         .foregroundColor(entry.mode.accentColor)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(entry.mode.accentColor.opacity(0.2))
+                        .cornerRadius(8)
                     
+                    // ADDED: Show shape mode info
                     if entry.shapeMode {
-                        Text("✨ Shapes")
-                            .font(.caption)
-                            .foregroundColor(.purple)
+                        HStack(spacing: 4) {
+                            Image(systemName: "sparkles")
+                                .font(.caption2)
+                            Text("Shapes")
+                                .font(.caption)
+                        }
+                        .foregroundColor(.purple)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.purple.opacity(0.2))
+                        .cornerRadius(8)
                     }
                 }
             }
             
             Spacer()
             
-            // Score
-            Text("\(entry.score)")
-                .font(.title2.bold())
-                .foregroundColor(.yellow)
+            // Total Score
+            VStack(alignment: .trailing, spacing: 4) {
+                Text("\(entry.totalScore)")
+                    .font(.title2.bold())
+                    .foregroundColor(.yellow)
+                Text("total")
+                    .font(.caption2)
+                    .foregroundColor(.white.opacity(0.5))
+            }
         }
         .padding()
         .background(
@@ -139,9 +160,9 @@ struct LeaderboardRowView: View {
         )
     }
     
-    var rankEmoji: String {
+    private var rankEmoji: String {
         switch rank {
-        case 1: return "🥇"
+        case 1: return "����"
         case 2: return "🥈"
         case 3: return "🥉"
         default: return "\(rank)"

@@ -11,18 +11,23 @@ struct GameTileView: View {
     
     var body: some View {
         ZStack {
-            // Background
+            // Background with border for better visibility
             RoundedRectangle(cornerRadius: 12)
-                .fill(isWrong ? Color.red.opacity(0.3) : Color.white.opacity(0.05))
+                .fill(isWrong ? Color.red.opacity(0.3) : Color.white.opacity(0.08))
                 .frame(width: size, height: size)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                )
             
-            // Shape or circle
+            // Shape or circle - Increased size ratio for better visibility
             if shapeMode {
-                shape.view(color: color, size: size * 0.6)
+                shape.view(color: color, size: size * 0.7)  // Increased from 0.6
             } else {
                 Circle()
                     .fill(color)
-                    .frame(width: size * 0.7, height: size * 0.7)
+                    .frame(width: size * 0.8, height: size * 0.8)  // Increased from 0.7
+                    .shadow(color: color.opacity(0.5), radius: 3)  // Added glow
             }
         }
         .scaleEffect(isPressed ? 0.9 : 1.0)

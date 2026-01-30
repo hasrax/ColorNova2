@@ -3,8 +3,9 @@ import SwiftUI
 import Combine
 
 class GameViewModel: ObservableObject {
-    @Published var tiles: [(color: Color, shape: TileShape)] = []
+    @Published var tiles: [(color: Color, shape: TileShape, colorData: ColorData)] = []
     @Published var targetColor: Color = .clear
+    @Published var targetColorData: ColorData?
     @Published var targetShape: TileShape = .circle
     @Published var score: Int = 0
     @Published var streak: Int = 0
@@ -21,6 +22,19 @@ class GameViewModel: ObservableObject {
     private var roundTimer: Timer?
     private var sessionTimer: Timer?
     private var lastTapTime: Date?
+    
+    // MARK: - Color Data Structure
+    struct ColorData: Equatable {
+        let hue: CGFloat
+        let saturation: CGFloat
+        let brightness: CGFloat
+        
+        static func == (lhs: ColorData, rhs: ColorData) -> Bool {
+            return abs(lhs.hue - rhs.hue) < 0.001 &&
+                   abs(lhs.saturation - rhs.saturation) < 0.001 &&
+                   abs(lhs.brightness - rhs.brightness) < 0.001
+        }
+    }
     
     // MARK: - Start Game
     
@@ -45,7 +59,7 @@ class GameViewModel: ObservableObject {
         tiles = []
         
         // Generate distinct colors
-        let colors = generateDistinctColors(count: gridCount)
+        let colorPairs = generateDistinctColors(count: gridCount)
         
         if shapeMode {
             // Generate random shapes
@@ -53,54 +67,98 @@ class GameViewModel: ObservableObject {
             
             // Pick a random target
             let targetIndex = Int.random(in: 0..<gridCount)
-            targetColor = colors[targetIndex]
+            targetColor = colorPairs[targetIndex].color
+            targetColorData = colorPairs[targetIndex].colorData
             targetShape = shapes[targetIndex]
             
             // Create tiles
             for i in 0..<gridCount {
-                tiles.append((color: colors[i], shape: shapes[i]))
+                tiles.append((
+                    color: colorPairs[i].color,
+                    shape: shapes[i],
+                    colorData: colorPairs[i].colorData
+                ))
             }
         } else {
             // Color-only mode
-            targetColor = colors.randomElement()!
-            targetShape = .circle // Not used in color-only mode
+            let targetIndex = Int.random(in: 0..<gridCount)
+            targetColor = colorPairs[targetIndex].color
+            targetColorData = colorPairs[targetIndex].colorData
+            targetShape = .circle
             
-            for color in colors {
-                tiles.append((color: color, shape: .circle))
+            for pair in colorPairs {
+                tiles.append((
+                    color: pair.color,
+                    shape: .circle,
+                    colorData: pair.colorData
+                ))
             }
+        }
+        
+        print("🎮 New board generated. Target color: H:\(targetColorData?.hue ?? 0), S:\(targetColorData?.saturation ?? 0), B:\(targetColorData?.brightness ?? 0)")
+    }
+    
+    // MARK: - Shuffle Board
+    
+    func shuffleBoard() {
+        tiles.shuffle()
+    }
+    
+    // MARK: - Get Rank
+    
+    func getRank() -> String {
+        switch score {
+        case 0..<20: return "Novice"
+        case 20..<50: return "Explorer"
+        case 50..<80: return "Star Pilot"
+        case 80..<120: return "Galaxy Master"
+        default: return "Cosmic Legend"
         }
     }
     
     // MARK: - Color Generation
     
-    func generateDistinctColors(count: Int) -> [Color] {
-        var colors: [Color] = []
+    func generateDistinctColors(count: Int) -> [(color: Color, colorData: ColorData)] {
+        var colors: [(color: Color, colorData: ColorData)] = []
         let goldenRatio: CGFloat = 0.618033988749895
         var hue: CGFloat = CGFloat.random(in: 0...1)
         
         for _ in 0..<count {
             hue += goldenRatio
             hue = hue.truncatingRemainder(dividingBy: 1.0)
+            
+            let colorData = ColorData(hue: hue, saturation: 0.9, brightness: 0.85)
             let color = Color(hue: hue, saturation: 0.9, brightness: 0.85)
-            colors.append(color)
+            
+            colors.append((color: color, colorData: colorData))
         }
         
         return colors.shuffled()
     }
     
-    // MARK: - Tile Tap Logic
+    // MARK: - Tile Tap Logic - FIXED
     
     func tileTapped(at index: Int) {
         guard isGameActive, !isPaused else { return }
+        guard index < tiles.count else { return }
         
         let tile = tiles[index]
         let isCorrect: Bool
         
+        print("🎯 Tile tapped at index \(index)")
+        print("   Tile color: H:\(tile.colorData.hue), S:\(tile.colorData.saturation), B:\(tile.colorData.brightness)")
+        print("   Target color: H:\(targetColorData?.hue ?? 0), S:\(targetColorData?.saturation ?? 0), B:\(targetColorData?.brightness ?? 0)")
+        
         if shapeMode {
-            isCorrect = (tile.color == targetColor && tile.shape == targetShape)
+            // FIXED: Compare both color AND shape
+            isCorrect = (tile.colorData == targetColorData && tile.shape == targetShape)
+            print("   Shape mode: Tile shape=\(tile.shape), Target shape=\(targetShape)")
         } else {
-            isCorrect = (tile.color == targetColor)
+            // Color-only mode
+            isCorrect = (tile.colorData == targetColorData)
         }
+        
+        print("   Match result: \(isCorrect ? "✅ CORRECT" : "❌ WRONG")")
         
         if isCorrect {
             handleCorrectTap()
@@ -110,10 +168,8 @@ class GameViewModel: ObservableObject {
     }
     
     func handleCorrectTap() {
-        // Base point
         var points = 1
         
-        // Speed bonus
         let timeTaken = mode.roundTime - roundTimeRemaining
         if timeTaken <= 2 {
             points += 3
@@ -123,7 +179,6 @@ class GameViewModel: ObservableObject {
             showBonus("💨 Quick Bonus +2")
         }
         
-        // Streak bonus
         streak += 1
         if streak == 5 {
             points += 5
@@ -134,6 +189,8 @@ class GameViewModel: ObservableObject {
         }
         
         score += points
+        print("✅ Correct tap! Score: \(score), Points added: \(points)")
+        
         roundTimeRemaining = mode.roundTime
         generateNewBoard()
         lastTapTime = Date()
@@ -142,14 +199,12 @@ class GameViewModel: ObservableObject {
     func handleWrongTap(at index: Int) {
         streak = 0
         wrongTileIndex = index
+        print("❌ Wrong tap! Streak reset.")
         
-        // Flash red animation
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             self.wrongTileIndex = nil
         }
     }
-    
-    // MARK: - Bonus Message
     
     func showBonus(_ message: String) {
         bonusMessage = message
@@ -167,7 +222,6 @@ class GameViewModel: ObservableObject {
             if self.roundTimeRemaining > 0 {
                 self.roundTimeRemaining -= 1
             } else {
-                // Round expired - reset streak and new board
                 self.streak = 0
                 self.roundTimeRemaining = self.mode.roundTime
                 self.generateNewBoard()
@@ -180,58 +234,27 @@ class GameViewModel: ObservableObject {
             if self.sessionTimeRemaining > 0 {
                 self.sessionTimeRemaining -= 1
             } else {
-                // Game over
                 self.endGame()
             }
         }
     }
     
-    func stopTimers() {
+    func endGame() {
+        isGameActive = false
+        showGameOver = true
         roundTimer?.invalidate()
         sessionTimer?.invalidate()
-        roundTimer = nil
-        sessionTimer = nil
     }
-    
-    // MARK: - Pause/Resume
     
     func togglePause() {
         isPaused.toggle()
     }
     
-    // MARK: - Shuffle
-    
-    func shuffleBoard() {
-        generateNewBoard()
-        // Timer keeps running - no penalty
-    }
-    
-    // MARK: - End Game
-    
-    func endGame() {
-        isGameActive = false
-        stopTimers()
-        showGameOver = true
-    }
-    
     func resetGame() {
-        stopTimers()
+        isGameActive = false
+        roundTimer?.invalidate()
+        sessionTimer?.invalidate()
         score = 0
         streak = 0
-        isGameActive = false
-        showGameOver = false
-        tiles = []
-    }
-    
-    // MARK: - Rank
-    
-    func getRank() -> String {
-        switch score {
-        case 0..<20: return "Cosmic Rookie"
-        case 20..<50: return "Space Explorer"
-        case 50..<80: return "Star Runner"
-        case 80..<120: return "Nova Pro"
-        default: return "Galaxy Legend"
-        }
     }
 }

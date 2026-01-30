@@ -6,9 +6,9 @@ struct GameGridView: View {
     var body: some View {
         GeometryReader { geometry in
             let gridSize = viewModel.mode.gridSize
-            let spacing: CGFloat = 8
+            let spacing: CGFloat = gridSize >= 5 ? 6 : 8
             let totalSpacing = spacing * CGFloat(gridSize - 1)
-            let availableWidth = min(geometry.size.width, geometry.size.height) - 40
+            let availableWidth = min(geometry.size.width, geometry.size.height) - 20
             let tileSize = (availableWidth - totalSpacing) / CGFloat(gridSize)
             
             VStack(spacing: spacing) {
@@ -20,7 +20,7 @@ struct GameGridView: View {
                                 let tile = viewModel.tiles[index]
                                 GameTileView(
                                     color: tile.color,
-                                    shape: tile.shape,
+                                    shape: tile.shape,  // FIXED: Pass actual shape from tile
                                     size: tileSize,
                                     isWrong: viewModel.wrongTileIndex == index,
                                     shapeMode: viewModel.shapeMode

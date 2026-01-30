@@ -87,7 +87,7 @@ class AuthViewModel: ObservableObject {
             
             // Fetch user profile from Firestore
             print("🔵 Fetching user profile...")
-            await fetchUserProfile(userId: result.user.uid)
+            fetchUserProfile(userId: result.user.uid)
             
             await MainActor.run {
                 self.isLoading = false
@@ -117,55 +117,61 @@ class AuthViewModel: ObservableObject {
     func updateProfile(name: String) {
         guard var currentUser = user else { return }
         currentUser.name = name
-        user = currentUser
         
         Task {
             try? await saveUserProfile(currentUser)
+            await MainActor.run {
+                self.user = currentUser
+            }
         }
     }
     
     // MARK: - Firestore Methods
     
-    private func saveUserProfile(_ profile: UserProfile) async throws {
+    func saveUserProfile(_ profile: UserProfile) async throws {
         let data: [String: Any] = [
-            "id": profile.id,
             "name": profile.name,
             "email": profile.email,
             "createdAt": Timestamp(date: profile.createdAt),
-            "totalGamesPlayed": profile.totalGamesPlayed,
-            "highestScore": profile.highestScore,
-            "acceptedPrivacy": profile.acceptedPrivacy
+            "acceptedPrivacy": profile.acceptedPrivacy,
+            "totalGamesPlayed": profile.totalGamesPlayed,  // Fixed property name
+            "highestScore": profile.highestScore  // Fixed property name
         ]
         
-        print("🔵 Saving to Firestore: users/\(profile.id)")
-        try await db.collection("users").document(profile.id).setData(data)
-        print("✅ Firestore save successful")
+        try await db.collection("users").document(profile.id).setData(data, merge: true)
     }
     
-    private func fetchUserProfile(userId: String) {
+    func fetchUserProfile(userId: String) {
         Task {
             do {
-                print("🔵 Fetching user profile from Firestore: \(userId)")
-                let snapshot = try await db.collection("users").document(userId).getDocument()
+                let document = try await db.collection("users").document(userId).getDocument()
                 
-                if let data = snapshot.data() {
-                    print("✅ User profile data retrieved")
-                    let profile = UserProfile(
-                        id: data["id"] as? String ?? userId,
-                        name: data["name"] as? String ?? "Player",
-                        email: data["email"] as? String ?? "",
-                        createdAt: (data["createdAt"] as? Timestamp)?.dateValue() ?? Date(),
-                        acceptedPrivacy: data["acceptedPrivacy"] as? Bool ?? false,
-                        totalGamesPlayed: data["totalGamesPlayed"] as? Int ?? 0,
-                        highestScore: data["highestScore"] as? Int ?? 0
-                    )
+                if let data = document.data() {
+                    print("🔵 User profile data found: \(data)")
                     
+                    // Handle createdAt date
+                    let createdAt: Date
+                    if let timestamp = data["createdAt"] as? Timestamp {
+                        createdAt = timestamp.dateValue()
+                    } else {
+                        createdAt = Date()
+                    }
+                    
+                    let profile = UserProfile(
+                        id: userId,
+                        name: data["name"] as? String ?? "Unknown",
+                        email: data["email"] as? String ?? "",
+                        createdAt: createdAt,
+                        acceptedPrivacy: data["acceptedPrivacy"] as? Bool ?? false,
+                        totalGamesPlayed: data["totalGamesPlayed"] as? Int ?? 0,  // Fixed property name
+                        highestScore: data["highestScore"] as? Int ?? 0  // Fixed property name
+                    )
                     await MainActor.run {
                         self.user = profile
                         print("✅ User profile loaded: \(profile.name)")
                     }
                 } else {
-                    print("⚠️ No user profile found in Firestore")
+                    print("⚠️ No user profile found in Firestore for ID: \(userId)")
                 }
             } catch {
                 print("❌ Error fetching user profile: \(error.localizedDescription)")
@@ -176,26 +182,24 @@ class AuthViewModel: ObservableObject {
         }
     }
     
-    // MARK: - Update Stats
-    
     func updateGameStats(score: Int) async {
         guard var currentUser = user else { return }
         
-        currentUser.totalGamesPlayed += 1
-        if score > currentUser.highestScore {
-            currentUser.highestScore = score
+        // Update total games played
+        currentUser.totalGamesPlayed += 1  // Fixed property name
+        
+        // Update highest score if current score is higher
+        if score > currentUser.highestScore {  // Fixed property name
+            currentUser.highestScore = score  // Fixed property name
         }
         
-        user = currentUser
-        
         do {
-            try await db.collection("users").document(currentUser.id).updateData([
-                "totalGamesPlayed": currentUser.totalGamesPlayed,
-                "highestScore": currentUser.highestScore
-            ])
-            print("✅ Game stats updated")
+            try await saveUserProfile(currentUser)
+            await MainActor.run {
+                self.user = currentUser
+            }
         } catch {
-            print("❌ Error updating stats: \(error.localizedDescription)")
+            print("❌ Error updating game stats: \(error.localizedDescription)")
         }
     }
 }

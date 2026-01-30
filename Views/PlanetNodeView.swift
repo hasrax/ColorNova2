@@ -44,9 +44,10 @@ struct PlanetNodeView: View {
                     )
                     .shadow(color: mode.accentColor.opacity(0.5), radius: 15)
                 
-                // Planet emoji/icon
-                Text(mode.planetEmoji)
+                // Planet icon - Changed from emoji to SF Symbol
+                Image(systemName: mode.planetIcon)
                     .font(.system(size: 40))
+                    .foregroundColor(.white)
             }
             .scaleEffect(isPulsing ? 1.05 : 1.0)
             

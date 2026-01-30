@@ -8,8 +8,8 @@ struct AchievementsView: View {
         ZStack {
             GalaxyBackgroundView()
             
-            VStack(spacing: 20) {
-                // Header
+            VStack(spacing: 0) {
+                // Header - MOVED HIGHER
                 HStack {
                     Button(action: { dismiss() }) {
                         Image(systemName: "chevron.left")
@@ -20,14 +20,16 @@ struct AchievementsView: View {
                     Spacer()
                     
                     Text("⭐️ Achievements")
-                        .font(.title.bold())
+                        .font(.largeTitle.bold())  // Made bigger
                         .foregroundColor(.white)
                     
                     Spacer()
                     
                     Color.clear.frame(width: 30)
                 }
-                .padding()
+                .padding(.horizontal)
+                .padding(.top, 20)  // Added top padding
+                .padding(.bottom, 30)  // More space below title
                 
                 // Progress bar
                 VStack(spacing: 8) {
@@ -51,10 +53,11 @@ struct AchievementsView: View {
                 .background(Color.white.opacity(0.05))
                 .cornerRadius(15)
                 .padding(.horizontal)
+                .padding(.bottom, 20)  // More space before achievements
                 
                 // Achievements list
                 ScrollView {
-                    VStack(spacing: 12) {
+                    VStack(spacing: 15) {  // Increased spacing
                         ForEach(viewModel.achievements) { achievement in
                             AchievementRowView(achievement: achievement)
                         }
@@ -82,7 +85,7 @@ struct AchievementRowView: View {
                 )
             
             // Info
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {  // More spacing
                 Text(achievement.title)
                     .font(.headline)
                     .foregroundColor(achievement.unlocked ? .white : .white.opacity(0.5))

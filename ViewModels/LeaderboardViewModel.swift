@@ -3,6 +3,16 @@ import SwiftUI
 import Combine
 import FirebaseFirestore
 
+// NEW: Aggregated score structure
+struct AggregatedScore: Identifiable {
+    let id = UUID()
+    let userId: String
+    let name: String
+    let totalScore: Int
+    let mode: GameMode
+    let shapeMode: Bool
+}
+
 class LeaderboardViewModel: ObservableObject {
     @Published var topScores: [ScoreEntry] = []
     @Published var isLoading = false
@@ -25,7 +35,7 @@ class LeaderboardViewModel: ObservableObject {
         do {
             let snapshot = try await db.collection("leaderboard")
                 .order(by: "score", descending: true)
-                .limit(to: 100)
+                .limit(to: 500)  // Increased to get more data for aggregation
                 .getDocuments()
             
             let scores = snapshot.documents.compactMap { doc -> ScoreEntry? in
@@ -96,5 +106,39 @@ class LeaderboardViewModel: ObservableObject {
         }
         
         return Array(scores.prefix(10))
+    }
+    
+    // NEW: Aggregate scores by user, mode, and shape mode
+    var aggregatedScores: [AggregatedScore] {
+        var scores = topScores
+        
+        // Apply filters
+        if let mode = selectedMode {
+            scores = scores.filter { $0.mode == mode }
+        }
+        
+        if let shapeFilter = selectedShapeFilter {
+            scores = scores.filter { $0.shapeMode == shapeFilter }
+        }
+        
+        // Group by userId + mode + shapeMode and sum scores
+        let grouped = Dictionary(grouping: scores) { entry in
+            "\(entry.userId)_\(entry.mode.rawValue)_\(entry.shapeMode)"
+        }
+        
+        let aggregated = grouped.map { (key, entries) -> AggregatedScore in
+            let totalScore = entries.reduce(0) { $0 + $1.score }
+            let first = entries.first!
+            return AggregatedScore(
+                userId: first.userId,
+                name: first.name,
+                totalScore: totalScore,
+                mode: first.mode,
+                shapeMode: first.shapeMode
+            )
+        }
+        
+        // Sort by total score and return top 10
+        return Array(aggregated.sorted { $0.totalScore > $1.totalScore }.prefix(10))
     }
 }
