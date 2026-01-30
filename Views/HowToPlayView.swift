@@ -6,11 +6,11 @@ struct HowToPlayView: View {
     @State private var demoTarget: Color = .cyan
     
     let steps = [
-        ("👀 Find the Match", "Look at the target color shown at the top"),
-        ("👆 Tap Quickly", "Find and tap the matching tile in the grid"),
-        ("⚡️ Speed Bonus", "Tap within 2 seconds for extra points!"),
-        ("🔥 Build Streaks", "Chain correct answers for massive bonuses"),
-        ("⏱️ Beat the Clock", "Each round has a time limit - stay focused!")
+        ("👀", "Find the Match", "Look at the target color shown at the top"),
+        ("👆", "Tap Quickly", "Find and tap the matching tile in the grid"),
+        ("⚡️", "Speed Bonus", "Tap within 2 seconds for extra points!"),
+        ("🔥", "Build Streaks", "Chain correct answers for massive bonuses"),
+        ("⏱️", "Beat the Clock", "Each round has a time limit - stay focused!")
     ]
     
     var body: some View {
@@ -18,7 +18,7 @@ struct HowToPlayView: View {
             GalaxyBackgroundView()
             
             VStack(spacing: 0) {
-                // Header - FIXED positioning
+                // Header - FIXED at top
                 HStack {
                     Button(action: { dismiss() }) {
                         Image(systemName: "chevron.left")
@@ -35,87 +35,90 @@ struct HowToPlayView: View {
                     
                     Spacer()
                     
-                    // Spacer for symmetry
                     Color.clear.frame(width: 50)
                 }
-                .padding(.horizontal)
-                .padding(.top, 10)
+                .frame(height: 60)
                 .background(Color.black.opacity(0.3))
                 
-                // FIXED: Proper ScrollView starting from top
+                // Content - MORE SPACE
                 ScrollView {
-                    VStack(spacing: 25) {
-                        // Demo Section
-                        VStack(spacing: 15) {
+                    VStack(spacing: 20) {
+                        // Demo Section - Compact
+                        VStack(spacing: 12) {
                             Text("Live Demo")
-                                .font(.title2.bold())
+                                .font(.headline)
                                 .foregroundColor(.cyan)
-                                .padding(.top, 20)
                             
-                            // Target Display
-                            VStack(spacing: 10) {
-                                Text("Find This Color")
-                                    .font(.headline)
-                                    .foregroundColor(.white)
-                                
-                                Circle()
-                                    .fill(demoTarget)
-                                    .frame(width: 60, height: 60)
-                                    .shadow(color: demoTarget.opacity(0.6), radius: 10)
-                            }
-                            .padding()
-                            .background(Color.white.opacity(0.1))
-                            .cornerRadius(15)
-                            
-                            // Demo Grid
-                            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
-                                ForEach(0..<9, id: \.self) { index in
+                            HStack(spacing: 20) {
+                                // Target
+                                VStack(spacing: 6) {
+                                    Text("Find This")
+                                        .font(.caption)
+                                        .foregroundColor(.white.opacity(0.7))
                                     Circle()
-                                        .fill(index < demoColors.count ? demoColors[index] : Color.gray)
-                                        .frame(height: 60)
-                                        .shadow(color: (index < demoColors.count ? demoColors[index] : Color.gray).opacity(0.4), radius: 5)
+                                        .fill(demoTarget)
+                                        .frame(width: 50, height: 50)
+                                        .shadow(color: demoTarget.opacity(0.5), radius: 8)
+                                }
+                                
+                                // Arrow
+                                Image(systemName: "arrow.right")
+                                    .foregroundColor(.white.opacity(0.5))
+                                
+                                // Grid
+                                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 3), spacing: 6) {
+                                    ForEach(0..<9, id: \.self) { index in
+                                        Circle()
+                                            .fill(index < demoColors.count ? demoColors[index] : Color.gray)
+                                            .frame(width: 35, height: 35)
+                                    }
                                 }
                             }
                             .padding()
                             .background(Color.white.opacity(0.05))
-                            .cornerRadius(15)
+                            .cornerRadius(12)
                         }
                         .padding(.horizontal)
+                        .padding(.top, 10)
                         
                         Divider()
-                            .background(Color.white.opacity(0.3))
-                            .padding(.vertical, 10)
+                            .background(Color.white.opacity(0.2))
+                            .padding(.horizontal)
                         
-                        // Instructions
-                        VStack(spacing: 15) {
+                        // Instructions - Compact
+                        VStack(spacing: 10) {
                             Text("Instructions")
-                                .font(.title2.bold())
+                                .font(.headline)
                                 .foregroundColor(.cyan)
                             
                             ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
-                                HStack(alignment: .top, spacing: 12) {
+                                HStack(alignment: .top, spacing: 10) {
                                     Text(step.0)
-                                        .font(.system(size: 35))
+                                        .font(.system(size: 30))
+                                        .frame(width: 40)
                                     
-                                    VStack(alignment: .leading, spacing: 4) {
+                                    VStack(alignment: .leading, spacing: 2) {
                                         Text(step.1)
-                                            .font(.subheadline)
+                                            .font(.subheadline.bold())
                                             .foregroundColor(.white)
+                                        Text(step.2)
+                                            .font(.caption)
+                                            .foregroundColor(.white.opacity(0.7))
                                     }
                                     
                                     Spacer()
                                 }
-                                .padding()
-                                .background(Color.white.opacity(0.08))
-                                .cornerRadius(12)
+                                .padding(10)
+                                .background(Color.white.opacity(0.05))
+                                .cornerRadius(10)
                             }
                         }
                         .padding(.horizontal)
                         
-                        // Tips
-                        VStack(spacing: 12) {
+                        // Tips - Compact
+                        VStack(spacing: 8) {
                             Text("💡 Pro Tips")
-                                .font(.title3.bold())
+                                .font(.headline)
                                 .foregroundColor(.yellow)
                             
                             TipRow(icon: "eye.fill", text: "Use peripheral vision", color: .cyan)
@@ -125,7 +128,7 @@ struct HowToPlayView: View {
                         }
                         .padding()
                         .background(Color.white.opacity(0.05))
-                        .cornerRadius(15)
+                        .cornerRadius(12)
                         .padding(.horizontal)
                         
                         // Start button
@@ -142,10 +145,10 @@ struct HowToPlayView: View {
                                         endPoint: .trailing
                                     )
                                 )
-                                .cornerRadius(15)
+                                .cornerRadius(12)
                         }
                         .padding(.horizontal)
-                        .padding(.bottom, 30)
+                        .padding(.bottom, 20)
                     }
                 }
             }
@@ -178,22 +181,22 @@ struct TipRow: View {
     let color: Color
     
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             Image(systemName: icon)
                 .foregroundColor(color)
-                .font(.title3)
-                .frame(width: 30)
+                .font(.body)
+                .frame(width: 25)
             
             Text(text)
-                .font(.subheadline)
+                .font(.caption)
                 .foregroundColor(.white)
             
             Spacer()
         }
-        .padding(.vertical, 10)
-        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .padding(.horizontal, 10)
         .background(Color.white.opacity(0.05))
-        .cornerRadius(10)
+        .cornerRadius(8)
     }
 }
 

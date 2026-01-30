@@ -3,95 +3,65 @@ import SwiftUI
 struct ProfileView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @Environment(\.dismiss) var dismiss
-    @State private var editName = ""
-    @State private var isEditingName = false
     
     var body: some View {
         ZStack {
             GalaxyBackgroundView()
             
-            ScrollView {
-                VStack(spacing: 25) {
-                    // Header
-                    HStack {
-                        Button(action: { dismiss() }) {
-                            Image(systemName: "chevron.left")
-                                .font(.title2)
-                                .foregroundColor(.white)
+            VStack(spacing: 0) {
+                // Header - FIXED at top
+                HStack {
+                    Button(action: { dismiss() }) {
+                        Image(systemName: "chevron.left")
+                            .font(.title2)
+                            .foregroundColor(.white)
+                            .padding()
+                    }
+                    
+                    Spacer()
+                    
+                    Text("👤 Profile")
+                        .font(.title.bold())
+                        .foregroundColor(.white)
+                    
+                    Spacer()
+                    
+                    Color.clear.frame(width: 50)
+                }
+                .frame(height: 60)
+                .background(Color.black.opacity(0.3))
+                
+                // Content - MORE SPACE
+                ScrollView {
+                    VStack(spacing: 20) {
+                        // Profile info
+                        if let user = authViewModel.user {
+                            VStack(spacing: 15) {
+                                Image(systemName: "person.circle.fill")
+                                    .font(.system(size: 80))
+                                    .foregroundColor(.cyan)
+                                
+                                Text(user.name)
+                                    .font(.title2.bold())
+                                    .foregroundColor(.white)
+                                
+                                Text(user.email)
+                                    .font(.subheadline)
+                                    .foregroundColor(.white.opacity(0.7))
+                            }
+                            .padding(.top, 20)
+                            
+                            // Stats
+                            VStack(spacing: 12) {
+                                StatRow(label: "Games Played", value: "\(user.totalGamesPlayed)", icon: "gamecontroller.fill", color: .cyan)
+                                StatRow(label: "Highest Score", value: "\(user.highestScore)", icon: "star.fill", color: .yellow)
+                                StatRow(label: "Member Since", value: user.createdAt.formatted(date: .abbreviated, time: .omitted), icon: "calendar", color: .green)
+                            }
+                            .padding()
                         }
                         
                         Spacer()
                     }
-                    .padding()
-                    
-                    // Profile icon
-                    Image(systemName: "person.circle.fill")
-                        .font(.system(size: 100))
-                        .foregroundColor(.cyan)
-                        .shadow(color: .cyan.opacity(0.5), radius: 20)
-                    
-                    // Name
-                    if isEditingName {
-                        HStack {
-                            TextField("Name", text: $editName)
-                                .textFieldStyle(GalaxyTextFieldStyle())
-                            
-                            Button("Save") {
-                                authViewModel.updateProfile(name: editName)
-                                isEditingName = false
-                            }
-                            .foregroundColor(.green)
-                        }
-                        .padding(.horizontal)
-                    } else {
-                        HStack {
-                            Text(authViewModel.user?.name ?? "Player")
-                                .font(.title.bold())
-                                .foregroundColor(.white)
-                            
-                            Button(action: {
-                                editName = authViewModel.user?.name ?? ""
-                                isEditingName = true
-                            }) {
-                                Image(systemName: "pencil")
-                                    .foregroundColor(.cyan)
-                            }
-                        }
-                    }
-                    
-                    Text(authViewModel.user?.email ?? "")
-                        .font(.subheadline)
-                        .foregroundColor(.white.opacity(0.7))
-                    
-                    // Stats
-                    VStack(spacing: 15) {
-                        StatRowView(
-                            icon: "gamecontroller.fill",
-                            label: "Games Played",
-                            value: "\(authViewModel.user?.totalGamesPlayed ?? 0)",
-                            color: .purple
-                        )
-                        
-                        StatRowView(
-                            icon: "star.fill",
-                            label: "Highest Score",
-                            value: "\(authViewModel.user?.highestScore ?? 0)",
-                            color: .yellow
-                        )
-                        
-                        StatRowView(
-                            icon: "calendar",
-                            label: "Member Since",
-                            value: authViewModel.user?.createdAt.formatted(date: .abbreviated, time: .omitted) ?? "",
-                            color: .cyan
-                        )
-                    }
-                    .padding()
-                    .background(Color.white.opacity(0.05))
-                    .cornerRadius(20)
-                    .padding(.horizontal)
-                    
-                    Spacer()
                 }
             }
         }
@@ -99,18 +69,17 @@ struct ProfileView: View {
     }
 }
 
-struct StatRowView: View {
-    let icon: String
+struct StatRow: View {
     let label: String
     let value: String
+    let icon: String
     let color: Color
     
     var body: some View {
-        HStack(spacing: 15) {
+        HStack {
             Image(systemName: icon)
-                .font(.title2)
                 .foregroundColor(color)
-                .frame(width: 40)
+                .frame(width: 30)
             
             Text(label)
                 .foregroundColor(.white.opacity(0.7))

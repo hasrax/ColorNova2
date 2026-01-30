@@ -9,30 +9,29 @@ struct LeaderboardView: View {
             GalaxyBackgroundView()
             
             VStack(spacing: 0) {
-                // Header - MOVED HIGHER
+                // Header - FIXED at top
                 HStack {
                     Button(action: { dismiss() }) {
                         Image(systemName: "chevron.left")
                             .font(.title2)
                             .foregroundColor(.white)
+                            .padding()
                     }
                     
                     Spacer()
                     
                     Text("🏆 Leaderboard")
-                        .font(.largeTitle.bold())  // Made bigger
+                        .font(.title.bold())
                         .foregroundColor(.white)
                     
                     Spacer()
                     
-                    // Placeholder for symmetry
-                    Color.clear.frame(width: 30)
+                    Color.clear.frame(width: 50)
                 }
-                .padding(.horizontal)
-                .padding(.top, 20)  // Added top padding
-                .padding(.bottom, 30)  // More space below title
+                .frame(height: 60)
+                .background(Color.black.opacity(0.3))
                 
-                // Filters
+                // Filters - Compact
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 10) {
                         FilterButton(
@@ -53,11 +52,12 @@ struct LeaderboardView: View {
                     }
                     .padding(.horizontal)
                 }
-                .padding(.bottom, 20)  // More space before scores
+                .frame(height: 50)
+                .padding(.vertical, 10)
                 
-                // Top scores list
+                // Top scores list - MORE SPACE
                 ScrollView {
-                    VStack(spacing: 15) {  // Increased spacing
+                    VStack(spacing: 12) {
                         ForEach(Array(viewModel.aggregatedScores.enumerated()), id: \.element.userId) { index, entry in
                             LeaderboardRowView(
                                 rank: index + 1,
@@ -86,8 +86,8 @@ struct FilterButton: View {
             Text(title)
                 .font(.subheadline.bold())
                 .foregroundColor(isSelected ? .black : .white)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 10)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
                 .background(isSelected ? Color.yellow : Color.white.opacity(0.1))
                 .cornerRadius(20)
         }
@@ -99,40 +99,39 @@ struct LeaderboardRowView: View {
     let entry: AggregatedScore
     
     var body: some View {
-        HStack(spacing: 15) {
-            // Rank medal
+        HStack(spacing: 12) {
+            // Rank
             Text(rankEmoji)
-                .font(.title2)
-                .frame(width: 40)
+                .font(.title3)
+                .frame(width: 35)
             
             // Player info
-            VStack(alignment: .leading, spacing: 6) {  // More spacing
+            VStack(alignment: .leading, spacing: 4) {
                 Text(entry.name)
                     .font(.headline)
                     .foregroundColor(.white)
                 
-                HStack(spacing: 8) {
+                HStack(spacing: 6) {
                     Text(entry.mode.title)
                         .font(.caption)
                         .foregroundColor(entry.mode.accentColor)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
                         .background(entry.mode.accentColor.opacity(0.2))
-                        .cornerRadius(8)
+                        .cornerRadius(6)
                     
-                    // ADDED: Show shape mode info
                     if entry.shapeMode {
-                        HStack(spacing: 4) {
+                        HStack(spacing: 2) {
                             Image(systemName: "sparkles")
                                 .font(.caption2)
                             Text("Shapes")
                                 .font(.caption)
                         }
                         .foregroundColor(.purple)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
                         .background(Color.purple.opacity(0.2))
-                        .cornerRadius(8)
+                        .cornerRadius(6)
                     }
                 }
             }
@@ -140,9 +139,9 @@ struct LeaderboardRowView: View {
             Spacer()
             
             // Total Score
-            VStack(alignment: .trailing, spacing: 4) {
+            VStack(alignment: .trailing, spacing: 2) {
                 Text("\(entry.totalScore)")
-                    .font(.title2.bold())
+                    .font(.title3.bold())
                     .foregroundColor(.yellow)
                 Text("total")
                     .font(.caption2)
@@ -151,18 +150,18 @@ struct LeaderboardRowView: View {
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 15)
+            RoundedRectangle(cornerRadius: 12)
                 .fill(Color.white.opacity(rank <= 3 ? 0.15 : 0.05))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 15)
-                        .stroke(rank <= 3 ? Color.yellow.opacity(0.5) : Color.clear, lineWidth: 2)
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(rank <= 3 ? Color.yellow.opacity(0.5) : Color.clear, lineWidth: 1.5)
                 )
         )
     }
     
     private var rankEmoji: String {
         switch rank {
-        case 1: return "����"
+        case 1: return "🥇"
         case 2: return "🥈"
         case 3: return "🥉"
         default: return "\(rank)"
