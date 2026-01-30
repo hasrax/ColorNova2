@@ -17,17 +17,21 @@ struct GameGridView: View {
                         ForEach(0..<gridSize, id: \.self) { col in
                             let index = row * gridSize + col
                             if index < viewModel.tiles.count {
-                                let tile = viewModel.tiles[index]
-                                GameTileView(
-                                    color: tile.color,
-                                    shape: tile.shape,  // FIXED: Pass actual shape from tile
-                                    size: tileSize,
-                                    isWrong: viewModel.wrongTileIndex == index,
-                                    shapeMode: viewModel.shapeMode
-                                )
-                                .onTapGesture {
-                                    viewModel.tileTapped(at: index)
-                                }
+                                let tileValue = viewModel.tiles[index]
+                                let tileColor = viewModel.colors[tileValue]
+                                
+                                Circle()
+                                    .fill(tileColor)
+                                    .frame(width: tileSize * 0.8, height: tileSize * 0.8)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(viewModel.wrongTileIndex == index ? Color.red.opacity(0.3) : Color.white.opacity(0.08))
+                                            .frame(width: tileSize, height: tileSize)
+                                    )
+                                    .onTapGesture {
+                                        print("👆 Grid tap at index \(index)")
+                                        viewModel.tileTapped(at: index)
+                                    }
                             }
                         }
                     }
@@ -36,12 +40,5 @@ struct GameGridView: View {
             .frame(width: availableWidth, height: availableWidth)
             .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
         }
-    }
-}
-
-#Preview {
-    ZStack {
-        GalaxyBackgroundView()
-        GameGridView(viewModel: GameViewModel())
     }
 }

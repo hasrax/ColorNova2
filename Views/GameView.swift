@@ -3,7 +3,6 @@ import SwiftUI
 struct GameView: View {
     let mode: GameMode
     @StateObject private var viewModel = GameViewModel()
-    @State private var showSettings = false
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
@@ -11,9 +10,8 @@ struct GameView: View {
             GalaxyBackgroundView()
             
             VStack(spacing: 20) {
-                // Top bar
-                HStack {
-                    // Back button
+                // Top bar - FIXED: All in one frame, no spacers
+                HStack(spacing: 0) {
                     Button(action: {
                         viewModel.resetGame()
                         dismiss()
@@ -25,10 +23,10 @@ struct GameView: View {
                             .background(Color.white.opacity(0.1))
                             .clipShape(Circle())
                     }
+                    .frame(width: 80, alignment: .leading)
                     
                     Spacer()
                     
-                    // Score
                     VStack(spacing: 4) {
                         Text("Score")
                             .font(.caption)
@@ -36,11 +34,12 @@ struct GameView: View {
                         Text("\(viewModel.score)")
                             .font(.title.bold())
                             .foregroundColor(.white)
+                            .monospacedDigit()  // Fixed width numbers
                     }
+                    .frame(width: 100)
                     
                     Spacer()
                     
-                    // Pause button
                     Button(action: {
                         viewModel.togglePause()
                     }) {
@@ -51,139 +50,106 @@ struct GameView: View {
                             .background(Color.white.opacity(0.1))
                             .clipShape(Circle())
                     }
+                    .frame(width: 80, alignment: .trailing)
                 }
+                .frame(height: 60)
                 .padding(.horizontal)
                 
-                // Timer and streak bar
                 HStack(spacing: 20) {
-                    // Session time
-                    TimerView(
-                        icon: "hourglass",
-                        label: "Session",
-                        time: viewModel.sessionTimeRemaining,
-                        color: .cyan
-                    )
+                    TimerView(icon: "hourglass", label: "Session", time: viewModel.sessionTimeRemaining, color: .cyan)
+                        .frame(width: 100)
                     
-                    // Streak
                     VStack(spacing: 4) {
                         Text("🔥")
                             .font(.title2)
                         Text("\(viewModel.streak)")
                             .font(.title3.bold())
                             .foregroundColor(.white)
+                            .monospacedDigit()
                         Text("Streak")
                             .font(.caption)
                             .foregroundColor(.white.opacity(0.7))
                     }
+                    .frame(width: 80)
                     .padding()
                     .background(Color.orange.opacity(0.2))
                     .cornerRadius(15)
                     
-                    // Round time
-                    TimerView(
-                        icon: "timer",
-                        label: "Round",
-                        time: viewModel.roundTimeRemaining,
-                        color: .purple
-                    )
+                    TimerView(icon: "timer", label: "Round", time: viewModel.roundTimeRemaining, color: .blue)
+                        .frame(width: 100)
                 }
+                .frame(height: 100)
                 .padding(.horizontal)
                 
-                // Target display
-                TargetDisplayView(
-                    color: viewModel.targetColor,
-                    shape: viewModel.targetShape,
-                    shapeMode: viewModel.shapeMode
-                )
-                .padding(.vertical, 10)
+                TargetDisplayView(color: viewModel.targetColor, shape: viewModel.targetShape, shapeMode: viewModel.shapeMode)
+                    .frame(height: 100)
+                    .padding(.vertical, 10)
                 
-                // Game grid
                 if viewModel.isGameActive {
                     GameGridView(viewModel: viewModel)
                         .padding()
                 } else {
-                    // Start button
-                    Button(action: {
-                        viewModel.startGame(mode: mode)
-                    }) {
-                        Text("Start Game")
-                            .font(.title2.bold())
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(
-                                LinearGradient(
-                                    colors: [mode.accentColor, mode.accentColor.opacity(0.6)],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .cornerRadius(15)
-                    }
-                    .padding(.horizontal, 40)
-                }
-                
-                // Shape mode toggle
-                if !viewModel.isGameActive {
-                    Toggle(isOn: $viewModel.shapeMode) {
-                        HStack {
-                            Text("✨ Shape Mode")
-                                .font(.headline)
+                    VStack(spacing: 20) {
+                        Button(action: {
+                            viewModel.startGame(mode: mode)
+                        }) {
+                            Text("Start Game")
+                                .font(.title2.bold())
                                 .foregroundColor(.white)
-                            Text("(Harder)")
-                                .font(.caption)
-                                .foregroundColor(.white.opacity(0.6))
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(LinearGradient(colors: [mode.accentColor, mode.accentColor.opacity(0.6)], startPoint: .leading, endPoint: .trailing))
+                                .cornerRadius(15)
                         }
+                        .padding(.horizontal, 40)
+                        
+                        Toggle(isOn: $viewModel.shapeMode) {
+                            HStack {
+                                Text("✨ Shape Mode")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                                Text("(Harder)")
+                                    .font(.caption)
+                                    .foregroundColor(.white.opacity(0.6))
+                            }
+                        }
+                        .tint(.cyan)
+                        .padding(.horizontal, 40)
                     }
-                    .toggleStyle(SwitchToggleStyle(tint: .purple))
-                    .padding(.horizontal, 40)
-                    .padding()
-                    .background(Color.white.opacity(0.05))
-                    .cornerRadius(15)
-                    .padding(.horizontal)
                 }
-                
-                // Tip
-                Text("💡 \(mode.tip)")
-                    .font(.footnote)
-                    .foregroundColor(.white.opacity(0.7))
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
                 
                 Spacer()
             }
-            .padding(.top)
             
-            // Bonus message overlay
             if let bonus = viewModel.bonusMessage {
                 VStack {
                     Text(bonus)
                         .font(.title2.bold())
-                        .foregroundColor(.white)
+                        .foregroundColor(.yellow)
                         .padding()
-                        .background(Color.green.opacity(0.8))
+                        .background(Color.black.opacity(0.7))
                         .cornerRadius(15)
-                        .shadow(radius: 10)
-                        .transition(.scale.combined(with: .opacity))
+                        .padding(.top, 100)
                     Spacer()
                 }
-                .padding(.top, 100)
             }
             
-            // Pause overlay
-            if viewModel.isPaused && viewModel.isGameActive {
+            if viewModel.isPaused {
                 PauseOverlayView(viewModel: viewModel)
             }
             
-            // Game over screen
             if viewModel.showGameOver {
                 GameOverView(viewModel: viewModel, mode: mode)
             }
         }
         .navigationBarBackButtonHidden(true)
+        .transaction { transaction in
+            transaction.animation = nil  // CRITICAL: Disable ALL animations
+        }
     }
 }
 
 #Preview {
     GameView(mode: .easy)
+        .environmentObject(AuthViewModel())
 }

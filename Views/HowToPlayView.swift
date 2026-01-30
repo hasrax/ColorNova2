@@ -2,7 +2,6 @@ import SwiftUI
 
 struct HowToPlayView: View {
     @Environment(\.dismiss) var dismiss
-    @State private var currentStep = 0
     @State private var demoColors: [Color] = []
     @State private var demoTarget: Color = .cyan
     
@@ -19,34 +18,39 @@ struct HowToPlayView: View {
             GalaxyBackgroundView()
             
             VStack(spacing: 0) {
-                // Header
+                // Header - FIXED positioning
                 HStack {
                     Button(action: { dismiss() }) {
                         Image(systemName: "chevron.left")
                             .font(.title2)
                             .foregroundColor(.white)
+                            .padding()
                     }
                     
                     Spacer()
                     
                     Text("How to Play")
-                        .font(.largeTitle.bold())
+                        .font(.title.bold())
                         .foregroundColor(.white)
                     
                     Spacer()
                     
-                    Color.clear.frame(width: 30)
+                    // Spacer for symmetry
+                    Color.clear.frame(width: 50)
                 }
-                .padding()
-                .padding(.top, 20)
+                .padding(.horizontal)
+                .padding(.top, 10)
+                .background(Color.black.opacity(0.3))
                 
+                // FIXED: Proper ScrollView starting from top
                 ScrollView {
-                    VStack(spacing: 30) {
+                    VStack(spacing: 25) {
                         // Demo Section
-                        VStack(spacing: 20) {
+                        VStack(spacing: 15) {
                             Text("Live Demo")
                                 .font(.title2.bold())
                                 .foregroundColor(.cyan)
+                                .padding(.top, 20)
                             
                             // Target Display
                             VStack(spacing: 10) {
@@ -56,46 +60,46 @@ struct HowToPlayView: View {
                                 
                                 Circle()
                                     .fill(demoTarget)
-                                    .frame(width: 80, height: 80)
-                                    .shadow(color: demoTarget.opacity(0.6), radius: 15)
+                                    .frame(width: 60, height: 60)
+                                    .shadow(color: demoTarget.opacity(0.6), radius: 10)
                             }
                             .padding()
                             .background(Color.white.opacity(0.1))
-                            .cornerRadius(20)
+                            .cornerRadius(15)
                             
                             // Demo Grid
-                            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
+                            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
                                 ForEach(0..<9, id: \.self) { index in
                                     Circle()
                                         .fill(index < demoColors.count ? demoColors[index] : Color.gray)
-                                        .frame(height: 70)
-                                        .shadow(color: (index < demoColors.count ? demoColors[index] : Color.gray).opacity(0.5), radius: 5)
+                                        .frame(height: 60)
+                                        .shadow(color: (index < demoColors.count ? demoColors[index] : Color.gray).opacity(0.4), radius: 5)
                                 }
                             }
                             .padding()
                             .background(Color.white.opacity(0.05))
-                            .cornerRadius(20)
+                            .cornerRadius(15)
                         }
-                        .padding()
+                        .padding(.horizontal)
                         
                         Divider()
                             .background(Color.white.opacity(0.3))
-                            .padding(.vertical)
+                            .padding(.vertical, 10)
                         
                         // Instructions
-                        VStack(spacing: 20) {
+                        VStack(spacing: 15) {
                             Text("Instructions")
                                 .font(.title2.bold())
                                 .foregroundColor(.cyan)
                             
                             ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
-                                HStack(alignment: .top, spacing: 15) {
+                                HStack(alignment: .top, spacing: 12) {
                                     Text(step.0)
-                                        .font(.system(size: 40))
+                                        .font(.system(size: 35))
                                     
-                                    VStack(alignment: .leading, spacing: 5) {
+                                    VStack(alignment: .leading, spacing: 4) {
                                         Text(step.1)
-                                            .font(.headline)
+                                            .font(.subheadline)
                                             .foregroundColor(.white)
                                     }
                                     
@@ -103,26 +107,26 @@ struct HowToPlayView: View {
                                 }
                                 .padding()
                                 .background(Color.white.opacity(0.08))
-                                .cornerRadius(15)
+                                .cornerRadius(12)
                             }
                         }
-                        .padding()
+                        .padding(.horizontal)
                         
                         // Tips
-                        VStack(spacing: 15) {
+                        VStack(spacing: 12) {
                             Text("💡 Pro Tips")
                                 .font(.title3.bold())
                                 .foregroundColor(.yellow)
                             
-                            TipRow(icon: "eye.fill", text: "Use your peripheral vision - don't fixate!", color: .cyan)
+                            TipRow(icon: "eye.fill", text: "Use peripheral vision", color: .cyan)
                             TipRow(icon: "bolt.fill", text: "Speed = More Points!", color: .orange)
-                            TipRow(icon: "flame.fill", text: "5-streak = +5 bonus points", color: .red)
-                            TipRow(icon: "star.fill", text: "Practice on Easy mode first", color: .yellow)
+                            TipRow(icon: "flame.fill", text: "5-streak = +5 bonus", color: .red)
+                            TipRow(icon: "star.fill", text: "Practice Easy mode first", color: .yellow)
                         }
                         .padding()
                         .background(Color.white.opacity(0.05))
-                        .cornerRadius(20)
-                        .padding()
+                        .cornerRadius(15)
+                        .padding(.horizontal)
                         
                         // Start button
                         Button(action: { dismiss() }) {
@@ -174,10 +178,11 @@ struct TipRow: View {
     let color: Color
     
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             Image(systemName: icon)
                 .foregroundColor(color)
                 .font(.title3)
+                .frame(width: 30)
             
             Text(text)
                 .font(.subheadline)
@@ -185,7 +190,8 @@ struct TipRow: View {
             
             Spacer()
         }
-        .padding()
+        .padding(.vertical, 10)
+        .padding(.horizontal, 12)
         .background(Color.white.opacity(0.05))
         .cornerRadius(10)
     }
